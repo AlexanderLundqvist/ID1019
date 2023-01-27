@@ -29,7 +29,7 @@ defmodule EnvTree do
   end
 
   # If we found the key then we can just replace the value with the new one
-  def add({:node, currentKey, _currentValue, left, right}, key, value) do
+  def add({:node, key, _value, left, right}, key, value) do
     {:node, key, value, left, right}
   end
 
@@ -52,10 +52,6 @@ defmodule EnvTree do
   found key-value pair or nil if not found.
   '''
 
-  def add(nil, key, value) do
-    {:node, key, value, nil, nil}
-  end
-
   # Looking up value for a key in an empty tree. Underscored parameter
   # means that we will match for it but disregard it.
   def lookup(nil, _key) do
@@ -64,18 +60,18 @@ defmodule EnvTree do
 
   # If the key of the node corresponds to the searched key,
   # we can return the value.
-  def lookup({:node, key, value, left, right}, key) do
-    value
+  def lookup({:node, key, value, _left, _right}, key) do
+    {key, value}
   end
 
-  # If the searched key is smaller than the
-  def lookup({:node, currentKey, currentValue, left, right}, key, value) when key < currentKey do
-    {:node, currentKey,  currentValue, add(left, key, value), right}
+  # If the searched key is smaller than the current node, traverse the left branch.
+  def lookup({:node, currentKey, _currentValue, left, _right}, key) when key < currentKey do
+    lookup(left, key)
   end
 
-  # Initial case.
-  def lookup({:node, currentKey, currentValue, left, right}, key, value) do
-    {:node, currentKey,  currentValue, left, add(right, key, value)}
+  # If the searched key is larger than the current node, traverse the right branch.
+  def lookup({:node, _currentKey, _currentValue, _left, right}, key) do
+    lookup(right, key)
   end
 
   # -------------------- Remove ----------------------
@@ -91,72 +87,46 @@ defmodule EnvTree do
 
   # Remove a key-value pair from an empty tree. Underscored parameter
   # means that we will match for it but disregard it.
-  def remove(nil, _) do
+  def remove(nil, _key) do
     nil
   end
 
-  #
-  def remove({:node, currentKey, _currentValue, nil, right}, key) do
-    ...
+  # If the left branch doesn't exist, "delete" current node by returning the right branch
+  def remove({:node, key, _value, nil, right}, key) do
+    right
+  end
+
+  # If the right branch doesn't exist, "delete" current node by returning the left branch
+  def remove({:node, key, _value, left, nil}, key) do
+    left
   end
 
   #
-  def remove({:node, currentKey, _currentValue, left, nil}, key) do
-    ...
+  def remove({:node, key, _value, left, right}, key) do
+    {key, value, rest} = leftmost(right)
+    {:node, key, value, left, rest}
   end
 
-  #
-  def remove({:node, currentKey, _currentValue, left, right}, key) do
-  ... = leftmost(right)
-  {:node, ..., ..., ..., ...}
-  end
-
-  #
+  # If the key is smaller than the key in the current node, traverse down the left branch
   def remove({:node, currentKey, currentValue, left, right}, key) when key < currentKey do
-  {:node, currentKey, currentValue, ..., right}
+  {:node, currentKey, currentValue, remove(left, key), right}
   end
 
-  #
+  # If the key is greater than the key in the current node, traverse down the right branch
   def remove({:node, currentKey, currentValue, left, right}, key) do
-  {:node, currentKey, currentValue, left, ...}
+  {:node, currentKey, currentValue, left, remove(right, key)}
   end
 
   #
-  def leftmost({:node, currentKey, currentValue, nil, rest}) do
-    ...
+  def leftmost({:node, key, value, nil, rest}) do
+    {key, value, rest}
   end
 
   #
   def leftmost({:node, currentKey, currentValue, left, right}) do
-  ... = leftmost(left)
-  ...
+    {key, value, rest} = leftmost(left)
+    {key, value, {:node, currentKey, currentValue, rest, right}}
   end
 
 
-end
-
-def add(nil, key, value) do  {:node, key, value, nil, nil} end
-def add({:node, key, _, left, right}, key, value) do {:node, key, value, left, right} end
-def add({:node, k, v, left, right}, key, value) when key < k do {:node, k, v, add(left, key, value), right} end
-def add({:node, k, v, left, right}, key, value) do {:node, k, v, left, add(right, key, value)} end
-
-def lookup(nil, _key) do nil end
-def lookup({:node, key, value, _left, _right}, key) do {key, value} end
-def lookup({:node, k, _, left, _right}, key) when key < k do lookup(left, key) end
-def lookup({:node, _, _, _left, right}, key) do lookup(right, key) end
-
-def remove(nil, _) do nil end
-def remove({:node, key, _, nil, right}, key) do right end
-def remove({:node, key, _, left, nil}, key) do left end
-def remove({:node, key, _, left, right}, key) do
-  {key, value, rest} = leftmost(right)
-  {:node, key, value, left, rest}
-end
-def remove({:node, k, v, left, right}, key) when key < k do {:node, k, v, remove(left, key), right} end
-def remove({:node, k, v, left, right}, key) do {:node, k, v, left, remove(right, key)} end
-
-def leftmost({:node, key, value, nil, rest}) do {key, value, rest} end
-def leftmost({:node, k, v, left, right}) do
-  {key, value, rest} = leftmost(left)
-  {key, value, {:node, k, v, rest, right}}
 end

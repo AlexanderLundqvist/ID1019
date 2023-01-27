@@ -56,7 +56,7 @@ defmodule EnvList do
   # Remove a key-value pair from an empty list. Underscored parameter
   # means that we will match for it but disregard it.
   def remove([], _key) do
-    nil
+    []
   end
 
   # Use pattern matching on the parameters, if it finds the key specified, return the tail
@@ -70,6 +70,5 @@ defmodule EnvList do
   def remove([head|tail], key) do
     [head|remove(tail, key)]
   end
-
 
 end
