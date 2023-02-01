@@ -1,15 +1,25 @@
 defmodule Test do
 
+  @type expression() :: literal()
+  | {:add, expression(), expression()}
+  | {:sub, expression(), expression()}
+  | {:mul, expression(), expression()}
+  | {:div, expression(), expression()}
+
+  @type literal() :: {:num, number()}
+  | {:var, atom()}
+  | {:quot, number(), number()}
+
   # Translates an expression to a more readable format.
   def translate(expression) do
     case expression do
       {:num, number} -> "#{number}"
-      {:var, variable} -> "#{name}"
+      {:var, variable} -> "#{variable}"
       {:quot, numerator, denominator} -> "#{translate(numerator)}/#{translate(denominator)}"
       {:add, expression1, expression2} -> "#{translate(expression1)} + #{translate(expression2)}"
       {:sub, expression1, expression2} -> "#{translate(expression1)} - #{translate(expression2)}"
       {:mul, expression1, expression2} -> "#{translate(expression1)}*#{translate(expression2)}"
-      {:mul, expression, {:var, variable}} -> "#{translate(expression)}#{translate(variable)}"
+      {:div, expression1, expression2} -> "#{translate(expression1)} / #{translate(expression2)}"
       _ -> "Error: invalid expression"
     end
   end
@@ -40,7 +50,7 @@ defmodule Test do
     IO.write("Result: #{Evaluation.evaluate(mul, environment)}\n\n")
 
     mulFrac = {:mul, {:quot, 3, 5}, {:quot, 5, 8}}
-    IO.write("Testing integer multiplication\n")
+    IO.write("Testing fraction multiplication\n")
     IO.write("Expression: 3/5 * 5/8\n")
     IO.write("Expected: 3/8\n")
     IO.write("Result: #{Evaluation.evaluate(mulFrac, environment)}\n\n")
@@ -68,13 +78,13 @@ defmodule Test do
 
     # Define the environment.
     environment = %{}
-    environment = Map.put(environment, x, 2)
-    environment = Map.put(environment, y, 4)
-    environment = Map.put(environment, z, 6)
+    environment = Map.put(environment, :x, 2)
+    environment = Map.put(environment, :y, 4)
+    environment = Map.put(environment, :z, 6)
 
     #IO.write("Expression: 2x + 3 + 1/2\n")
     IO.write("Expression: #{translate(expression)}\n")
-    IO.write("x = #{Map.get(environment, x)}\n")
+    IO.write("x = #{Map.get(environment, :x)}\n")
     IO.write("Result: #{Evaluation.evaluate(expression, environment)}\n")
   end
 
