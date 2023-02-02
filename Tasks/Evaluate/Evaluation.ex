@@ -1,14 +1,23 @@
 defmodule Evaluation do
 
+  @type literal() :: {:num, number()}
+  | {:var, atom()}
+  | {:quot, number(), number()}
+
   @type expression() :: literal()
   | {:add, expression(), expression()}
   | {:sub, expression(), expression()}
   | {:mul, expression(), expression()}
   | {:div, expression(), expression()}
 
-  @type literal() :: {:num, number()}
-  | {:var, atom()}
-  | {:quot, number(), number()}
+  def test do
+    environment = %{x: 2}
+
+    # 2x + 3 + 3
+    expression = {:add, {:add, {:mul, {:num, 2}, {:var, :x}}, {:num, 3}}, {:num, 3}}
+
+    evaluate(expression, environment)
+  end
 
   # Any single number is just evaluated to itself.
   def evaluate({:num, number}, _environment) do number end
@@ -16,13 +25,6 @@ defmodule Evaluation do
   # For the evaluation of a variable we have to look in the environment to find the value bound to the variable.
   # The environment is implemented with Elixir's Map module.
   def evaluate({:var, variable}, environment) do Map.get(environment, variable) end
-
-  # Fractional numbers are evaluated to the lowest common denominator.
-  def evaluate({:quot, numerator, denominator}, _environment) do
-    #gcd = numerator |> Integer.gcd(denominator)
-    gcd = Integer.gcd(numerator, denominator)
-    {:quot, numerator/gcd, denominator/gcd}
-  end
 
   # The evaluation functions passes the expressions and the environment to corresponding arithmetic operation functions.
   def evaluate({:add, expression1, expression2}, environment) do
@@ -38,6 +40,11 @@ defmodule Evaluation do
     divide(evaluate(expression1, environment), evaluate(expression2, environment))
   end
 
+  # Fractional numbers are evaluated to the lowest common denominator.
+  def evaluate({:quot, numerator, denominator}, _environment) do
+    gcd = Integer.gcd(numerator, denominator)
+    {:quot, numerator/gcd, denominator/gcd}
+  end
 
   # ----------------------------------- Addition ------------------------------------
 
@@ -75,7 +82,7 @@ defmodule Evaluation do
     {:quot, number*denominator - numerator, denominator}
   end
   defp subtract({:quot, numerator, denominator}, {:num, number}) do
-    {:quot, number*denominator - numerator, denominator}
+    {:quot, numerator - number*denominator, denominator}
   end
 
   # Subtraction between two fractions.
@@ -142,48 +149,49 @@ defmodule Evaluation do
 
   # Test the basic arithmetic operations
   def testOperations() do
+
+    # Only need an empty environment for this test
     environment = Map.new()
 
     # Addition
     add = {:add, {:num, 3}, {:num, 5}}
-    IO.write("Testing addition\n")
-    IO.write("Expression: 3 + 5\n")
+    IO.write("------------- Testing addition -------------\n")
+    IO.write("Expression: #{translate(add)}\n")
     IO.write("Expected: 8\n")
     IO.write("Result: #{evaluate(add, environment)}\n\n")
 
     # Subtraction
     sub = {:sub, {:num, 8}, {:num, 3}}
-    IO.write("Testing subtraction\n")
-    IO.write("Expression: 8 - 3\n")
+    IO.write("------------ Testing subtraction -----------\n")
+    IO.write("Expression: #{translate(sub)}\n")
     IO.write("Expected: 5\n")
     IO.write("Result: #{evaluate(sub, environment)}\n\n")
 
     # Multiplication
     mul = {:mul, {:num, 3}, {:num, 5}}
-    IO.write("Testing integer multiplication\n")
-    IO.write("Expression: 3 * 5\n")
+    IO.write("------ Testing integer multiplication ------\n")
+    IO.write("Expression: #{translate(mul)}\n")
     IO.write("Expected: 15\n")
     IO.write("Result: #{evaluate(mul, environment)}\n\n")
 
     mulFrac = {:mul, {:quot, 3, 5}, {:quot, 5, 8}}
-    IO.write("Testing fraction multiplication\n")
-    IO.write("Expression: 3/5 * 5/8\n")
+    IO.write("------ Testing fraction multiplication -----\n")
+    IO.write("Expression: #{translate(mulFrac)}\n")
     IO.write("Expected: 3/8\n")
     IO.write("Result: #{evaluate(mulFrac, environment)}\n\n")
 
     # Division
     div = {:div, {:num, 15}, {:num, 3}}
-    IO.write("Testing fraction division\n")
-    IO.write("Expression: 15 / 3\n")
+    IO.write("--------- Testing fraction division --------\n")
+    IO.write("Expression: #{translate(div)}\n")
     IO.write("Expected: 5\n")
     IO.write("Result: #{evaluate(div, environment)}\n\n")
 
     divFrac = {:div, {:quot, 3, 5}, {:quot, 5, 8}}
-    IO.write("Testing fraction division\n")
-    IO.write("Expression: 3/5 / 5/8\n")
+    IO.write("--------- Testing fraction division --------\n")
+    IO.write("Expression: #{translate(divFrac)}\n")
     IO.write("Expected: 49/40\n")
     IO.write("Result: #{evaluate(divFrac, environment)}\n\n")
-
   end
 
   # Test an expression.
@@ -203,5 +211,4 @@ defmodule Evaluation do
     IO.write("x = #{Map.get(environment, :x)}\n")
     IO.write("Result: #{evaluate(expression, environment)}\n")
   end
-
 end
