@@ -1,14 +1,5 @@
 defmodule Test do
 
-  @type literal() :: {:num, number()}
-  | {:var, atom()}
-  | {:quot, number(), number()}
-
-  @type expression() :: literal()
-  | {:add, expression(), expression()}
-  | {:sub, expression(), expression()}
-  | {:mul, expression(), expression()}
-  | {:div, expression(), expression()}
 
   # Translates an expression to a more readable format.
   def translate(expression) do
@@ -19,7 +10,7 @@ defmodule Test do
       {:sub, expression1, expression2} -> "#{translate(expression1)} - #{translate(expression2)}"
       {:mul, expression1, expression2} -> "#{translate(expression1)} * #{translate(expression2)}"
       {:div, expression1, expression2} -> "#{translate(expression1)} / #{translate(expression2)}"
-      {:quot, numerator, denominator} -> "#{translate(numerator)}/#{translate(denominator)}"
+      {:quot, numerator, denominator} -> "(#{numerator}/#{denominator})"
       _ -> "Error: invalid expression"
     end
   end
@@ -56,30 +47,26 @@ defmodule Test do
     IO.write("Expression: #{translate(mulFrac)}\n")
     IO.write("Expected: 3/8\n")
     IO.write("Result: #{translate(Evaluation.evaluate(mulFrac, environment))}\n\n")
-    IO.inspect(Evaluation.evaluate(mulFrac, environment))
-
 
     # Division
     div = {:div, {:num, 15}, {:num, 3}}
-    IO.write("--------- Testing fraction division --------\n")
+    IO.write("--------- Testing integer division --------\n")
     IO.write("Expression: #{translate(div)}\n")
     IO.write("Expected: 5\n")
     IO.write("Result: #{translate(Evaluation.evaluate(div, environment))}\n\n")
-    IO.inspect(Evaluation.evaluate(div, environment))
 
     divFrac = {:div, {:quot, 3, 5}, {:quot, 5, 8}}
     IO.write("--------- Testing fraction division --------\n")
     IO.write("Expression: #{translate(divFrac)}\n")
-    IO.write("Expected: 49/40\n")
+    IO.write("Expected: 24/25\n")
     IO.write("Result: #{translate(Evaluation.evaluate(divFrac, environment))}\n\n")
-    IO.inspect(Evaluation.evaluate(divFrac, environment))
   end
 
   # Test an expression.
   def testExpression() do
 
-    # 2x + 3 + 1/2
-    expression = {:add, {:add, {:mul, {:num, 2}, {:var, :x}}, {:num, 3}}, {:quot, 1, 2}}
+    # 2x + 8/4 + 3/7
+    expression = {:add, {:add, {:mul, {:num, 2}, {:var, :x}}, {:quot, 8, 14}}, {:quot, 3, 7}}
 
     # Define the environment.
     environment = Map.new()
@@ -88,12 +75,9 @@ defmodule Test do
     environment = Map.put(environment, :z, 6)
 
     IO.write("------- Testing expression evaluation ------\n")
-    #IO.write("Expression: 2x + 3 + 1/2\n")
     IO.write("Expression: #{translate(expression)}\n")
-    variable = Map.get(environment, :x)
-    IO.write("x = #{translate(variable)}\n")
-    result = Evaluation.evaluate(expression, environment)
-    IO.write("Result: #{translate(result)}\n\n")
+    IO.write("x = #{Map.get(environment, :x)}\n")
+    IO.write("Result: #{translate(Evaluation.evaluate(expression, environment))}\n\n")
   end
 
    # Test zero division.
@@ -108,10 +92,8 @@ defmodule Test do
 
     IO.write("--- Testing zero division multiplication ---\n")
     IO.write("Expression: 2x + 3 + 1/0\n")
-    errorVariable = Map.get(environment, :x)
-    IO.write("x = #{translate(errorVariable)}\n")
-    errorResult = Evaluation.evaluate(expression, environment)
-    IO.write("Result: #{translate(errorResult)}\n\n")
+    IO.write("x = #{Map.get(environment, :x)}\n")
+    IO.write("Result: #{translate(Evaluation.evaluate(expression, environment))}\n\n")
   end
 
 end
