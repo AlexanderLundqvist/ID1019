@@ -1,3 +1,0 @@
-def Test do
-
-end
