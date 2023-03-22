@@ -67,9 +67,7 @@ defmodule Huffman do
     [{b, bf} | insert({a, af}, rest)]
   end
 
-  def encode_table(tree) do
-    Enum.sort(tree,[])
-  end
+  def encode_table(tree), do: codes(tree, [])
 
   def codes({a, b}, current_position) do
     as = codes(a, [0 | current_position])
